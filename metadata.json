@@ -1,0 +1,6 @@
+{
+  "name": "PrintPilot AI",
+  "description": "One AI Platform for Every Printing Need — Pre-flight readiness, AI Poster & Card Generators, Print Doctor, Cost Estimator, and Color Correction for print shops.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
