@@ -1,6 +1,6 @@
 {
   "name": "PrintPilot AI",
-  "description": "One AI Platform for Every Printing Need — Pre-flight readiness, AI Poster & Card Generators, Print Doctor, Cost Estimator, and Color Correction for print shops.",
+  "description": "A browser-local print production toolkit — pre-flight readiness checks, press diagnostics, image enhancement, passport photos, visiting cards, resumes, PDF tools, poster generation, cost estimating and colour advice. All computations are deterministic and run client-side; no external AI or LLM is used.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": ["CLIENT_SIDE_PRINT_TOOLKIT"]
 }

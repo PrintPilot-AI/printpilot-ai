@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth, ToolType, SavedPrintJob } from '../context/AuthContext';
 import { 
-  Printer, 
   Sparkles, 
   CheckCircle2, 
   Clock, 
-  TrendingUp, 
   DollarSign, 
-  Plus, 
   Trash2, 
   Eye, 
   FileText, 
@@ -16,9 +13,7 @@ import {
   CreditCard, 
   Sliders, 
   Palette, 
-  ArrowRight,
   Filter,
-  Check,
   AlertTriangle,
   Building,
   Award,
@@ -33,34 +28,39 @@ export const DashboardPage: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState<'all' | 'doc' | 'photo' | 'design' | 'print'>('all');
 
-  const toolsLaunchList: { id: ToolType; label: string; icon: any; color: string; desc: string; category: 'doc' | 'photo' | 'design' | 'print'; categoryLabel: string }[] = [
+  const toolsLaunchList: { id: ToolType; label: string; icon: React.ComponentType<{ className?: string }>; color: string; desc: string; category: 'doc' | 'photo' | 'design' | 'print'; categoryLabel: string }[] = [
     // Printing Tools
-    { id: 'order-wizard', label: '7-Step Print Order Wizard', icon: Sparkles, color: 'from-blue-600 to-indigo-700', desc: 'Guided order workflow & RIP quote', category: 'print', categoryLabel: 'Printing' },
+    { id: 'order-wizard', label: '7-Step Print Order Wizard', icon: Sparkles, color: 'from-blue-600 to-indigo-700', desc: 'Guided upload, pre-flight & quote', category: 'print', categoryLabel: 'Printing' },
     { id: 'paper-manager', label: 'Paper Size & Quality', icon: Sliders, color: 'from-blue-500 to-cyan-600', desc: 'A3-A6, GSM stocks & finishes', category: 'print', categoryLabel: 'Printing' },
-    { id: 'doctor', label: 'AI Print Doctor', icon: Stethoscope, color: 'from-amber-500 to-red-500', desc: 'Fix banding & dampening defects', category: 'print', categoryLabel: 'Printing' },
+    { id: 'doctor', label: 'Print Doctor', icon: Stethoscope, color: 'from-amber-500 to-red-500', desc: 'Rule-based banding & defect fixes', category: 'print', categoryLabel: 'Printing' },
+    { id: 'cost', label: 'Print Cost Estimator', icon: DollarSign, color: 'from-cyan-500 to-blue-600', desc: 'Sheet nesting, GSM & margin quote', category: 'print', categoryLabel: 'Printing' },
 
     // Photo Tools
-    { id: 'passport', label: 'Passport Photo Maker', icon: ImageIcon, color: 'from-emerald-500 to-teal-600', desc: 'Auto bg removal & A4 sheet layout', category: 'photo', categoryLabel: 'Photo' },
-    { id: 'idcard', label: 'ID Card Designer', icon: CreditCard, color: 'from-blue-600 to-teal-600', desc: 'CR80 PVC School & Office ID cards', category: 'photo', categoryLabel: 'Photo' },
-    { id: 'enhance', label: 'AI Image Enhancer', icon: Sliders, color: 'from-indigo-500 to-blue-600', desc: 'DPI calculator & sharpening', category: 'photo', categoryLabel: 'Photo' },
+    { id: 'passport', label: 'Passport Photo Maker', icon: ImageIcon, color: 'from-emerald-500 to-teal-600', desc: 'ICAO 35×45mm, bg removal, 300 DPI', category: 'photo', categoryLabel: 'Photo' },
+    { id: 'idcard', label: 'ID Card Designer', icon: CreditCard, color: 'from-blue-600 to-teal-600', desc: 'CR80 cards with QR credential', category: 'photo', categoryLabel: 'Photo' },
+    { id: 'enhance', label: 'Image Enhancer', icon: Sliders, color: 'from-indigo-500 to-blue-600', desc: 'Local upscale, sharpen & auto-levels', category: 'photo', categoryLabel: 'Photo' },
 
     // Document Tools
-    { id: 'resume', label: 'AI Resume Builder V2', icon: FileText, color: 'from-emerald-600 to-cyan-600', desc: 'ATS, Pakistani & Gulf print specs', category: 'doc', categoryLabel: 'Document' },
-    { id: 'certificate', label: 'Certificate Generator', icon: Award, color: 'from-amber-500 to-yellow-600', desc: '300 DPI School & Course Certificates', category: 'doc', categoryLabel: 'Document' },
-    { id: 'pdf-tools', label: 'PDF Toolkit Pro', icon: Layers, color: 'from-sky-500 to-blue-600', desc: 'Merge, split, compress & convert PDFs', category: 'doc', categoryLabel: 'Document' },
-    { id: 'preflight', label: 'AI Readiness Checker', icon: CheckCircle2, color: 'from-teal-500 to-emerald-600', desc: 'Verify 300 DPI, CMYK & Bleeds', category: 'doc', categoryLabel: 'Document' },
-    { id: 'cost', label: 'AI Print Cost Estimator', icon: DollarSign, color: 'from-cyan-500 to-blue-600', desc: 'Paper GSM, ink & profit quote', category: 'doc', categoryLabel: 'Document' },
+    { id: 'resume', label: 'Resume Builder', icon: FileText, color: 'from-emerald-600 to-cyan-600', desc: 'ATS, professional & regional templates', category: 'doc', categoryLabel: 'Document' },
+    { id: 'certificate', label: 'Certificate Generator', icon: Award, color: 'from-amber-500 to-yellow-600', desc: 'Editable A4 award certificates', category: 'doc', categoryLabel: 'Document' },
+    { id: 'pdf-tools', label: 'PDF Toolkit', icon: Layers, color: 'from-sky-500 to-blue-600', desc: 'Merge, split, rotate, reorder & info', category: 'doc', categoryLabel: 'Document' },
+    { id: 'preflight', label: 'Pre-flight Checker', icon: CheckCircle2, color: 'from-teal-500 to-emerald-600', desc: 'Real DPI, colour mode & bleed audit', category: 'doc', categoryLabel: 'Document' },
 
     // Design Tools
-    { id: 'poster', label: 'AI Poster Generator', icon: ImageIcon, color: 'from-indigo-500 to-purple-600', desc: 'Draft 300 DPI vector posters', category: 'design', categoryLabel: 'Design' },
-    { id: 'card', label: 'AI Visiting Card V2', icon: CreditCard, color: 'from-purple-500 to-pink-600', desc: 'Double-sided vector cards', category: 'design', categoryLabel: 'Design' },
-    { id: 'color', label: 'AI Color Advisor', icon: Palette, color: 'from-fuchsia-500 to-rose-600', desc: 'RGB to CMYK & Pantone codes', category: 'design', categoryLabel: 'Design' },
+    { id: 'poster', label: 'Poster Generator', icon: ImageIcon, color: 'from-indigo-500 to-purple-600', desc: 'Deterministic SVG poster layouts', category: 'design', categoryLabel: 'Design' },
+    { id: 'card', label: 'Visiting Card Studio', icon: CreditCard, color: 'from-purple-500 to-pink-600', desc: 'Front/back themes with real QR', category: 'design', categoryLabel: 'Design' },
+    { id: 'color', label: 'Colour Advisor', icon: Palette, color: 'from-fuchsia-500 to-rose-600', desc: 'RGB→CMYK, TAC & nearest Pantone', category: 'design', categoryLabel: 'Design' },
   ];
 
   const filteredJobs = jobHistory.filter((job) => {
     if (filterTool === 'all') return true;
     return job.toolType.toLowerCase() === filterTool.toLowerCase();
   });
+
+  // Real, derived activity stats — never fabricated numbers.
+  const totalJobs = jobHistory.length;
+  const readyJobs = jobHistory.filter((j) => j.status === 'Ready' || j.status === 'Completed').length;
+  const flaggedJobs = jobHistory.filter((j) => j.status === 'Warning' || j.status === 'Action Required').length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
@@ -78,7 +78,7 @@ export const DashboardPage: React.FC = () => {
             {shopProfile.shopName} Dashboard
           </h1>
           <p className="text-sm text-slate-300">
-            Welcome back, <span className="text-indigo-300 font-semibold">{shopProfile.ownerName}</span>. Your AI pre-press engine is active and ready.
+            Welcome back, <span className="text-indigo-300 font-semibold">{shopProfile.ownerName}</span>. Your print toolkit is ready — every tool runs locally in your browser.
           </p>
         </div>
 
@@ -105,32 +105,29 @@ export const DashboardPage: React.FC = () => {
         
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
           <div className="flex items-center justify-between text-xs font-medium text-slate-400">
-            <span>Jobs Processed Today</span>
+            <span>Jobs Logged</span>
             <Clock className="w-4 h-4 text-indigo-400" />
           </div>
-          <p className="text-3xl font-extrabold text-white">18 <span className="text-xs font-normal text-slate-400">jobs</span></p>
-          <p className="text-xs text-emerald-400 font-medium flex items-center space-x-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>+24% vs yesterday</span>
-          </p>
+          <p className="text-3xl font-extrabold text-white">{totalJobs} <span className="text-xs font-normal text-slate-400">total</span></p>
+          <p className="text-xs text-slate-400">Saved from your tool runs on this device</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
           <div className="flex items-center justify-between text-xs font-medium text-slate-400">
-            <span>Pre-flight Pass Avg</span>
+            <span>Ready / Completed</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-3xl font-extrabold text-white">96.4%</p>
-          <p className="text-xs text-slate-400">Zero press rejections this week</p>
+          <p className="text-3xl font-extrabold text-white">{readyJobs}</p>
+          <p className="text-xs text-slate-400">Jobs marked ready to print</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
           <div className="flex items-center justify-between text-xs font-medium text-slate-400">
-            <span>AI Cost Saved</span>
-            <DollarSign className="w-4 h-4 text-amber-400" />
+            <span>Needs Attention</span>
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-3xl font-extrabold text-white">$1,420.00</p>
-          <p className="text-xs text-emerald-400 font-medium">Estimated pre-press hours saved</p>
+          <p className="text-3xl font-extrabold text-white">{flaggedJobs}</p>
+          <p className="text-xs text-slate-400">Flagged warnings or actions</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
@@ -144,12 +141,12 @@ export const DashboardPage: React.FC = () => {
 
       </div>
 
-      {/* QUICK LAUNCH AI TOOLS GRID */}
+      {/* QUICK LAUNCH TOOLS GRID */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-xl font-bold text-white flex items-center space-x-2">
             <Sparkles className="w-5 h-5 text-indigo-400" />
-            <span>AI Tools Hub Categories</span>
+            <span>Tools Hub Categories</span>
           </h2>
 
           {/* Category Filter Badges */}
@@ -214,7 +211,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div>
             <h2 className="text-xl font-bold text-white">Recent Print Jobs & Audits</h2>
-            <p className="text-xs text-slate-400">History of AI Print Doctor diagnoses, pre-flight certificates, and card drafts</p>
+            <p className="text-xs text-slate-400">History of Print Doctor diagnoses, pre-flight certificates, and card drafts</p>
           </div>
 
           <div className="flex items-center space-x-2">

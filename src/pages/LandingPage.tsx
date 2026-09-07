@@ -1,233 +1,220 @@
 import React, { useState } from 'react';
 import { useAuth, ToolType } from '../context/AuthContext';
-import { 
-  Printer, 
-  Sparkles, 
-  CheckCircle2, 
-  ArrowRight, 
-  Stethoscope, 
-  Image as ImageIcon, 
-  CreditCard, 
-  FileText, 
-  Sliders, 
-  DollarSign, 
-  Palette, 
-  ShieldCheck, 
-  Zap, 
-  ChevronRight, 
-  Star, 
-  MessageSquare, 
-  Smartphone, 
-  Cloud, 
-  Receipt, 
-  QrCode, 
-  Layers, 
-  Cpu, 
-  Clock, 
-  TrendingUp, 
+import { runPreflight, type PreflightResult } from '../lib/preflight';
+import {
+  Printer,
+  Sparkles,
+  CheckCircle2,
+  ArrowRight,
+  Stethoscope,
+  Image as ImageIcon,
+  CreditCard,
+  FileText,
+  Sliders,
+  DollarSign,
+  Palette,
+  ShieldCheck,
+  Zap,
+  ChevronRight,
+  Star,
+  MessageSquare,
+  Smartphone,
+  Cloud,
+  Receipt,
+  QrCode,
+  Layers,
+  Cpu,
+  TrendingUp,
   ChevronDown,
   Upload,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
+
+const statusColor = (s: string) =>
+  s === 'Pass' ? 'text-emerald-400' : s === 'Warning' ? 'text-amber-400' : 'text-rose-400';
+
+const statusPill = (s: string) =>
+  s === 'Pass'
+    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+    : s === 'Warning'
+      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+      : 'bg-rose-500/20 text-rose-300 border-rose-500/30';
 
 export const LandingPage: React.FC = () => {
   const { setCurrentPage, navigateToTool } = useAuth();
-  
-  // Quick preflight test state on landing page
-  const [testFileName, setTestFileName] = useState('flex_banner_10x4ft_300dpi.pdf');
-  const [testFileSize, setTestFileSize] = useState('14.2 MB');
-  const [testResult, setTestResult] = useState<any | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
 
-  // FAQ state
+  const [testResult, setTestResult] = useState<PreflightResult | null>(null);
+  const [testError, setTestError] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  const handleQuickTest = async () => {
+  // Deterministic sample pre-flight of a known 4×6in photo at 300 DPI.
+  // All values are real print math (mm/px/DPI) computed locally in the browser.
+  const handleQuickTest = () => {
     setAnalyzing(true);
+    setTestError(null);
     setTestResult(null);
-
     try {
-      const res = await fetch('/api/gemini/preflight', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: testFileName,
-          fileSizeMb: 14.2,
-          widthInches: 120,
-          heightInches: 48,
-          declaredDpi: 150,
-          colorSpace: 'CMYK',
-          hasBleed: true
-        })
+      const result = runPreflight({
+        fileName: 'photo_4x6_300dpi.jpg',
+        fileSizeMb: 3.2,
+        format: 'image/jpeg',
+        widthPx: 1800,
+        heightPx: 1200,
+        embeddedDpi: 300,
+        hasAlpha: false,
+        printWidthMm: 152.4,
+        printHeightMm: 101.6,
+        hasBleed: true,
+        colorMode: 'RGB',
       });
-      const json = await res.json();
-      setTestResult(json.data || json);
-    } catch (e) {
-      setTestResult({
-        overallStatus: 'Pass',
-        preflightScore: 94,
-        checklistResults: [
-          { checkItem: 'Resolution & DPI', status: 'Pass', detail: '150 DPI is optimal for 10x4ft flex viewing distance.' },
-          { checkItem: 'Color Space', status: 'Pass', detail: 'CMYK FOGRA39 profile verified.' },
-          { checkItem: 'Bleed Margins', status: 'Pass', detail: '3mm outer mirror bleed detected.' }
-        ]
-      });
+      setTestResult(result);
+    } catch (err: unknown) {
+      setTestError(err instanceof Error ? err.message : 'Unable to run the sample audit.');
     } finally {
       setAnalyzing(false);
     }
   };
 
-  const featureCards: { id: ToolType; title: string; desc: string; icon: any; color: string; badge: string }[] = [
+  const featureCards: { id: ToolType; title: string; desc: string; icon: React.ComponentType<{ className?: string }>; badge: string }[] = [
     {
-      id: 'doctor',
-      title: 'AI Print Doctor',
-      desc: 'Instant diagnostic engine for press banding, ink drying defects, static, hickey marks & blurry text.',
-      icon: Stethoscope,
-      color: 'from-amber-500 to-red-500',
-      badge: 'Press Diagnostics'
+      id: 'passport',
+      title: 'Passport Photo Maker',
+      desc: 'Local background removal with ICAO 35×45mm framing, 300 DPI output, and a printable multi-up sheet.',
+      icon: ShieldCheck,
+      badge: '35×45mm · 300 DPI',
     },
     {
       id: 'preflight',
-      title: 'AI Print Readiness',
-      desc: 'Automated file inspector validating 300 DPI resolution, CMYK color space, bleed safety, and font curves.',
+      title: 'Pre-flight Checker',
+      desc: 'Inspects a real uploaded image: effective DPI, embedded density, colour mode, bleed, format and size.',
       icon: CheckCircle2,
-      color: 'from-emerald-500 to-teal-600',
-      badge: 'Pre-flight Inspector'
+      badge: 'Deterministic Audit',
     },
     {
-      id: 'poster',
-      title: 'AI Poster Generator',
-      desc: 'Generate high-res vector poster designs with 3mm bleed guides, crop marks, and editable CMYK palettes.',
-      icon: ImageIcon,
-      color: 'from-indigo-500 to-blue-600',
-      badge: '300 DPI Vector'
-    },
-    {
-      id: 'card',
-      title: 'AI Visiting Card Generator',
-      desc: 'Double-sided 300 DPI business card creator with spot UV overlays, standard trim sizes, and vector SVG exports.',
-      icon: CreditCard,
-      color: 'from-purple-500 to-pink-600',
-      badge: 'Business Cards'
-    },
-    {
-      id: 'cost',
-      title: 'AI Print Cost Estimator',
-      desc: 'Calculates paper weight GSM factor, ink density, gang run sheet utilization, finishing, and retail profit margin.',
-      icon: DollarSign,
-      color: 'from-cyan-500 to-blue-600',
-      badge: 'Commercial Pricing'
-    },
-    {
-      id: 'color',
-      title: 'AI Color Correction Advisor',
-      desc: 'Detects out-of-gamut RGB shifts, converts to CMYK, matches Pantone spot codes, and enforces TAC limits.',
-      icon: Palette,
-      color: 'from-fuchsia-500 to-rose-600',
-      badge: 'Pantone & Gamut'
+      id: 'doctor',
+      title: 'Print Doctor',
+      desc: 'Rule-based diagnostics for banding, hickeys, ghosting and blur, with severity, cause and press fixes.',
+      icon: Stethoscope,
+      badge: 'Press Diagnostics',
     },
     {
       id: 'enhance',
-      title: 'AI Image Enhancer',
-      desc: 'Calculates maximum print scale, sharpens detail for offset dot gain, and recommends AI upscaling multiplier.',
+      title: 'Image Enhancer',
+      desc: 'Local upscale, unsharp sharpen, auto-levels, brightness/contrast/saturation — preview then download.',
       icon: Sliders,
-      color: 'from-blue-500 to-indigo-600',
-      badge: 'Raster Resolution'
+      badge: 'Canvas Processing',
+    },
+    {
+      id: 'card',
+      title: 'Visiting Card Studio',
+      desc: 'US business card and CR80 sizes, front/back themes, bleed, and real QR codes for vCard, WhatsApp, phone or web.',
+      icon: CreditCard,
+      badge: '88.9×50.8mm',
     },
     {
       id: 'resume',
-      title: 'AI Resume Builder',
-      desc: 'Generates 1-page ATS print-optimized resumes with strict 0.25in margins and crisp high-contrast typography.',
+      title: 'Resume Builder',
+      desc: 'Fully user-driven resume with ATS, professional, creative and regional templates, live A4 preview and print export.',
       icon: FileText,
-      color: 'from-emerald-600 to-cyan-600',
-      badge: 'Print Specification'
-    }
-  ];
-
-  const testimonials = [
-    {
-      quote: "PrintPilot AI saved our offset shop over 40 hours a week in pre-press file rejection cycles. The AI Print Doctor diagnosed a dampening pressure flaw in 10 seconds that our technicians struggled with for hours.",
-      author: "Marcus Sterling",
-      role: "Operations Manager, Sterling Graphics & Offset",
-      location: "Chicago, IL",
-      rating: 5
+      badge: 'A4 Print Layout',
     },
     {
-      quote: "The Cost Estimator and Visiting Card AI tools alone doubled our turn-around speed for walk-in commercial clients. Our clients love getting instant 300 DPI vector mockups with spot UV guides on the spot.",
-      author: "Elena Rostova",
-      role: "Lead Pre-press Designer, Metro Express Print",
-      location: "Toronto, ON",
-      rating: 5
+      id: 'cost',
+      title: 'Print Cost Estimator',
+      desc: 'Deterministic quote from quantity, sheet nesting, GSM paper weight, colour mode, finishing and turnaround.',
+      icon: DollarSign,
+      badge: 'Sheet Nesting',
     },
     {
-      quote: "Before PrintPilot AI, RGB color shifts on flex banners were costing us thousands in wasted vinyl. Now, the Color Advisor flags out-of-gamut shades before we send jobs to our Roland printers.",
-      author: "Rajesh Patel",
-      role: "Owner, Apex Wide Format Signs",
-      location: "Houston, TX",
-      rating: 5
-    }
+      id: 'color',
+      title: 'Colour Advisor',
+      desc: 'RGB→CMYK conversion, total ink coverage, gamut warnings and nearest Pantone match with ΔE distance.',
+      icon: Palette,
+      badge: 'Pantone & TAC',
+    },
+    {
+      id: 'poster',
+      title: 'Poster Generator',
+      desc: 'Deterministic SVG poster layout with colour schemes, bleed guides and optional crop marks.',
+      icon: ImageIcon,
+      badge: 'Vector SVG',
+    },
+    {
+      id: 'pdf-tools',
+      title: 'PDF Toolkit',
+      desc: 'Client-side merge, split, rotate, reorder, image-to-PDF and info — powered by pdf-lib, nothing uploaded to a server.',
+      icon: Layers,
+      badge: 'pdf-lib',
+    },
+    {
+      id: 'certificate',
+      title: 'Certificate Generator',
+      desc: 'Editable A4 certificate with recipient, event and signature fields, previewed and printed safely.',
+      icon: Star,
+      badge: 'A4 Certificate',
+    },
+    {
+      id: 'idcard',
+      title: 'ID Card Designer',
+      desc: 'CR80 card layout with photo, fields and QR, built to exact 85.60×53.98mm dimensions.',
+      icon: CreditCard,
+      badge: 'CR80 · 85.6×54mm',
+    },
   ];
 
   const faqs = [
     {
-      question: "What makes PrintPilot AI uniquely designed for commercial printing shops?",
-      answer: "PrintPilot AI is purpose-built for the commercial print industry, integrating pre-press specifications (300 DPI, CMYK color spaces, 3mm bleed margins, spot UV, Pantone PMS matching, and paper GSM factors) directly into AI algorithms."
+      question: 'Does PrintPilot AI use a cloud AI model for these tools?',
+      answer: 'No. Every tool runs deterministic print engineering locally in your browser — resolution math, colour conversion, sheet nesting, canvas image processing and pdf-lib document operations. There is no external AI or LLM dependency, and no files are uploaded to a server for the core tools.',
     },
     {
-      question: "How does the AI Print Doctor diagnose press defects?",
-      answer: "The AI Print Doctor utilizes machine learning trained on decades of offset, flexographic, digital toner, and wide-format inkjet press engineering. Simply input your defect symptoms (e.g. banding, hickeys, ink bleeding, text ghosting) and it produces root causes, mechanical press adjustments, and software settings."
+      question: 'How does the Print Doctor diagnose press defects?',
+      answer: 'It applies a curated rule base covering offset, digital toner and wide-format issues. You enter the symptom (banding, hickeys, ink bleeding, text ghosting) plus optional image statistics, and it returns findings with severity, likely cause, mechanical adjustment and software settings.',
     },
     {
-      question: "Can I export vector SVG files ready for plate making and vinyl cutting?",
-      answer: "Yes! Our AI Poster and AI Visiting Card generators output standard SVG vector files complete with trim guidelines, bleed zones (3mm / 0.125 in), and CMYK color palettes suitable for direct import into Illustrator, CorelDRAW, or RIP software."
+      question: 'What print sizes and DPI does the platform support?',
+      answer: 'Exact specs for A2–A6, US Letter, US Legal, Executive, 4×6in and 5×7in photos, US business card (88.9×50.8mm), CR80 (85.60×53.98mm) and ICAO passport (35×45mm), with correct mm/inch→pixel conversion at any target DPI.',
     },
     {
-      question: "Does PrintPilot AI handle large format flex and banner calculations?",
-      answer: "Absolutely. The Pre-flight Checker, Image Enhancer, and Cost Estimator all support standard sheet sizes, roll media up to 10ft wide, and custom DPI rules (e.g. 150 DPI for large format outdoor banners vs 300 DPI for hand-held flyers)."
+      question: 'Can I export print-ready files?',
+      answer: 'Yes. The Passport Photo Maker and Image Enhancer write real embedded DPI into PNG output (pHYs chunk), the PDF Toolkit produces genuine merged/split/rotated PDFs, and cards, resumes, certificates and posters print through a safe DOM-rendered print window.',
     },
     {
-      question: "Is Firebase setup required to try the platform?",
-      answer: "No setup is needed! PrintPilot AI includes a full instant Guest/Demo mode with mock history so you can test all 8 AI tools immediately."
-    }
+      question: 'Is Firebase setup required to try the platform?',
+      answer: 'No setup is needed. Guest/demo mode lets you run every tool immediately; signing in only adds saved job history.',
+    },
   ];
 
   return (
     <div className="min-h-screen text-white font-sans selection:bg-blue-500 selection:text-white">
-      
-      {/* Background Glow Accents */}
       <div className="relative overflow-hidden">
-
-        {/* HERO SECTION */}
+        {/* HERO */}
         <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-          
-          {/* Status Badge */}
-          <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-300 text-xs font-medium uppercase tracking-wider mb-8 backdrop-blur-md shadow-lg animate-in fade-in duration-500">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
-            <span>PrintPilot AI Production Ready v1.0</span>
-            <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">8 Tools</span>
+          <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-300 text-xs font-medium uppercase tracking-wider mb-8 backdrop-blur-md shadow-lg">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <span>PrintPilot AI · V2 Print Toolkit</span>
+            <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Runs Locally</span>
           </div>
 
-          {/* Main Headline */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] max-w-5xl mx-auto">
-            One AI Platform for Every <br className="hidden sm:inline" />
+            One Toolkit for Every <br className="hidden sm:inline" />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-300">
-              Printing Business Need.
+              Print Production Need.
             </span>
           </h1>
 
-          {/* Subtitle */}
           <p className="mt-6 text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto font-normal leading-relaxed">
-            Eliminate pre-press rejections, diagnose press defects instantly, generate 300 DPI print designs, and calculate accurate commercial job estimates in seconds.
+            Check print readiness, diagnose press defects, enhance and frame images at exact DPI, build cards and resumes, and estimate job costs — all computed deterministically in your browser.
           </p>
 
-          {/* CTA Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => navigateToTool('preflight')}
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-xl shadow-blue-600/25 transition-all flex items-center justify-center space-x-2 group active:scale-95"
             >
               <Sparkles className="w-5 h-5 text-blue-200" />
-              <span>Launch AI Tools Hub</span>
+              <span>Launch Tools Hub</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
 
@@ -240,92 +227,83 @@ export const LandingPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Key highlights pill bar */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
             <span className="flex items-center space-x-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>300 DPI Pre-flight Audits</span>
+              <span>Exact DPI &amp; Print Specs</span>
             </span>
             <span className="flex items-center space-x-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>3mm Bleed & Crop Marks</span>
+              <span>3mm Bleed &amp; Crop Marks</span>
             </span>
             <span className="flex items-center space-x-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Offset, Digital & Flexo AI</span>
+              <span>No Files Sent to a Server</span>
             </span>
             <span className="flex items-center space-x-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Pantone CMYK Gamut Check</span>
+              <span>Pantone &amp; CMYK Colour Math</span>
             </span>
           </div>
 
-          {/* INTERACTIVE MINI DEMO WIDGET */}
+          {/* DETERMINISTIC MINI DEMO */}
           <div className="mt-16 max-w-4xl mx-auto rounded-3xl bg-white/[0.03] border border-white/10 shadow-2xl p-6 sm:p-8 text-left backdrop-blur-md">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-white/10 gap-4">
               <div>
                 <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
-                  Interactive Live Pre-flight Test
+                  Sample Pre-flight Audit
                 </span>
-                <h3 className="text-xl font-bold text-white mt-2">Try AI Print Readiness Scan</h3>
+                <h3 className="text-xl font-bold text-white mt-2">Try a 4×6in Photo at 300 DPI</h3>
               </div>
-              <span className="text-xs text-gray-400 font-mono">300 DPI Vector Pre-press Analysis</span>
+              <span className="text-xs text-gray-400 font-mono">1800×1200px · 152.4×101.6mm</span>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-              <div className="md:col-span-2 space-y-3">
-                <label className="block text-xs font-medium text-gray-400">Sample Print File</label>
-                <div className="flex items-center space-x-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
-                  <FileText className="w-8 h-8 text-blue-400 shrink-0" />
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium text-white truncate">{testFileName}</p>
-                    <p className="text-xs text-gray-400">{testFileSize} • PDF Document</p>
-                  </div>
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex items-center space-x-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-sm flex-1 w-full">
+                <FileText className="w-8 h-8 text-blue-400 shrink-0" />
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-sm font-medium text-white truncate">photo_4x6_300dpi.jpg</p>
+                  <p className="text-xs text-gray-400">3.2 MB · RGB JPEG · 3mm bleed declared</p>
                 </div>
               </div>
 
-              <div>
-                <button
-                  onClick={handleQuickTest}
-                  disabled={analyzing}
-                  className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm transition-all flex items-center justify-center space-x-2 shadow-lg shadow-blue-600/20"
-                >
-                  {analyzing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Scanning CMYK & DPI...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 text-amber-300" />
-                      <span>Run Pre-flight Audit</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handleQuickTest}
+                disabled={analyzing}
+                className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm transition-all flex items-center justify-center space-x-2 shadow-lg shadow-blue-600/20"
+              >
+                <Zap className="w-4 h-4 text-amber-300" />
+                <span>Run Pre-flight Audit</span>
+              </button>
             </div>
 
-            {/* Test result output */}
+            {testError && (
+              <div className="mt-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start space-x-2">
+                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-rose-200">{testError}</p>
+              </div>
+            )}
+
             {testResult && (
-              <div className="mt-6 p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-4 animate-in fade-in duration-300 backdrop-blur-sm">
-                <div className="flex items-center justify-between">
+              <div className="mt-6 p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-4 backdrop-blur-sm">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      {testResult.overallStatus || 'Pass'}
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusPill(testResult.overallStatus)}`}>
+                      {testResult.overallStatus}
                     </span>
-                    <span className="text-sm font-bold text-white">Pre-flight Quality Score: {testResult.preflightScore || 94}/100</span>
+                    <span className="text-sm font-bold text-white">
+                      Pre-flight Score: {testResult.preflightScore}/100 · {testResult.effectiveDpi} DPI effective
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-400 font-mono">Pass Certificate Generated</span>
+                  <span className="text-xs text-gray-400 font-mono">{testResult.certificate.certificateId}</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {(testResult.checklistResults || []).map((item: any, idx: number) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {testResult.checklistResults.map((item, idx) => (
                     <div key={idx} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                       <div className="flex items-center justify-between font-semibold text-white">
                         <span>{item.checkItem}</span>
-                        <span className={item.status === 'Pass' ? 'text-emerald-400' : 'text-amber-400'}>
-                          {item.status}
-                        </span>
+                        <span className={statusColor(item.status)}>{item.status}</span>
                       </div>
                       <p className="text-gray-400 text-[11px] leading-tight">{item.detail}</p>
                     </div>
@@ -334,19 +312,18 @@ export const LandingPage: React.FC = () => {
               </div>
             )}
           </div>
-
         </section>
       </div>
 
-      {/* 8 AI TOOLS SHOWCASE GRID */}
+      {/* TOOLS GRID */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Built for Commercial Press Operators</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Built for Print Operators &amp; Designers</span>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            8 Specialized AI Engines for Printing
+            12 Print Production Tools
           </h2>
           <p className="text-gray-400 text-base sm:text-lg">
-            From pre-flight inspection to custom 300 DPI vector design and cost estimating, PrintPilot AI handles every phase of print production.
+            From pre-flight inspection and press diagnostics to image enhancement, document tools and cost estimating — every result is computed from real print math.
           </p>
         </div>
 
@@ -372,9 +349,7 @@ export const LandingPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
                     {tool.title}
                   </h3>
-                  <p className="mt-2 text-xs text-gray-400 leading-relaxed">
-                    {tool.desc}
-                  </p>
+                  <p className="mt-2 text-xs text-gray-400 leading-relaxed">{tool.desc}</p>
                 </div>
 
                 <div className="mt-6 pt-3 border-t border-white/5 flex items-center text-xs font-semibold text-blue-400 group-hover:text-blue-300">
@@ -387,61 +362,70 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* HOW IT WORKS (3 STEP WORKFLOW) */}
+      {/* HOW IT WORKS */}
       <section className="py-20 border-y border-white/5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Streamlined Pre-Press Workflow</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              How PrintPilot AI Transforms Production
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">How PrintPilot AI Works</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
             <div className="p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md relative space-y-4 hover:bg-white/[0.06] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-lg shadow-blue-600/30">
-                1
-              </div>
-              <h3 className="text-xl font-bold text-white">Upload or Input Specs</h3>
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-lg shadow-blue-600/30">1</div>
+              <h3 className="text-xl font-bold text-white">Upload or Enter Specs</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Drop your print PDF, image file, press defect notes, or job specifications directly into the specialized AI module.
+                Drop in a print image or PDF, or enter job specs — dimensions, quantity, paper GSM, colour mode and symptoms.
               </p>
             </div>
 
             <div className="p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md relative space-y-4 hover:bg-white/[0.06] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-lg shadow-indigo-600/30">
-                2
-              </div>
-              <h3 className="text-xl font-bold text-white">Instant AI Analysis & Generation</h3>
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-lg shadow-indigo-600/30">2</div>
+              <h3 className="text-xl font-bold text-white">Deterministic Local Processing</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Gemini 3.6 Flash inspects CMYK color profiles, calculates 300 DPI scale, diagnoses press mechanics, or drafts vector artwork.
+                Print math, colour conversion, canvas image processing, PDF operations and rule-based diagnostics run entirely in your browser.
               </p>
             </div>
 
             <div className="p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md relative space-y-4 hover:bg-white/[0.06] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-sm shadow-lg shadow-cyan-600/30">
-                3
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-sm shadow-lg shadow-cyan-600/30">3</div>
               <h3 className="text-xl font-bold text-white">Print-Ready Output</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Download pre-flight certificates, print cost quotes, high-resolution vector SVG files, or step-by-step press adjustment guides.
+                Download enhanced images with embedded DPI, real merged or split PDFs, cost quotes, or print through a safe preview window.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TESTIMONIALS / INDUSTRY TRUST */}
+      {/* TESTIMONIALS */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Trusted By Printing Shops</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-            Loved By Press Operators & Designers
-          </h2>
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Built for Real Print Shops</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Who It's For</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((t, idx) => (
+          {[
+            {
+              quote: 'Pre-press teams get instant, reproducible readiness checks. The same file always scores the same, with no black-box model behind the result.',
+              author: 'Pre-Press Operators',
+              role: 'Offset & digital shops',
+              rating: 5,
+            },
+            {
+              quote: 'Walk-in clients get an on-the-spot cost quote from real sheet nesting and GSM math, plus a print-ready card or resume in minutes.',
+              author: 'Print Shop Owners',
+              role: 'Commercial & quick print',
+              rating: 5,
+            },
+            {
+              quote: 'Designers convert RGB to CMYK, catch out-of-gamut colours and total ink coverage, and match the nearest Pantone before sending to the RIP.',
+              author: 'Graphic Designers',
+              role: 'Studios & freelancers',
+              rating: 5,
+            },
+          ].map((t, idx) => (
             <div key={idx} className="p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between space-y-6 hover:bg-white/[0.06] transition-all">
               <div className="space-y-4">
                 <div className="flex text-amber-400 space-x-1">
@@ -449,137 +433,89 @@ export const LandingPage: React.FC = () => {
                     <Star key={i} className="w-4 h-4 fill-amber-400" />
                   ))}
                 </div>
-                <p className="text-sm text-gray-300 italic leading-relaxed">
-                  "{t.quote}"
-                </p>
+                <p className="text-sm text-gray-300 italic leading-relaxed">"{t.quote}"</p>
               </div>
-
               <div className="pt-4 border-t border-white/5">
                 <p className="text-sm font-bold text-white">{t.author}</p>
                 <p className="text-xs text-gray-400">{t.role}</p>
-                <p className="text-[11px] text-blue-400 mt-0.5">{t.location}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* FUTURE ROADMAP SECTION */}
+      {/* ROADMAP */}
       <section className="py-20 border-t border-white/5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Innovations On The Horizon</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              PrintPilot AI Enterprise Roadmap 2026-2027
-            </h2>
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">What's Next</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Roadmap</h2>
             <p className="text-gray-400 text-sm sm:text-base">
-              Continual engineering expansion with native press automation, direct RIP hardware interfaces, and multi-tenant print shop management.
+              Planned expansions, all continuing the deterministic, browser-local approach.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Q1 2026 */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-blue-500/30 backdrop-blur-md space-y-4 relative">
+            <div className="p-6 rounded-3xl bg-white/[0.03] border border-blue-500/30 backdrop-blur-md space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">Q1 2026</span>
-                <span className="text-[10px] font-bold text-emerald-400">ACTIVE ROLLOUT</span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">Shipped</span>
+                <span className="text-[10px] font-bold text-emerald-400">V2</span>
               </div>
-              <h3 className="text-lg font-bold text-white">Mobile & Field Scanner</h3>
+              <h3 className="text-lg font-bold text-white">Core Toolkit</h3>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li className="flex items-center space-x-2">
-                  <Smartphone className="w-4 h-4 text-blue-400 shrink-0" />
-                  <span>iOS/Android press camera diagnostic scanner</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
-                  <span>WhatsApp Business AI Order & Instant Pre-flight</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <QrCode className="w-4 h-4 text-blue-400 shrink-0" />
-                  <span>Vector CMYK print-safe barcode & QR builder</span>
-                </li>
+                <li className="flex items-center space-x-2"><Upload className="w-4 h-4 text-blue-400 shrink-0" /><span>Local image &amp; PDF processing</span></li>
+                <li className="flex items-center space-x-2"><QrCode className="w-4 h-4 text-blue-400 shrink-0" /><span>Real QR codes on cards</span></li>
+                <li className="flex items-center space-x-2"><ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" /><span>Passport photo at ICAO spec</span></li>
               </ul>
             </div>
 
-            {/* Q2 2026 */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4 relative">
+            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Q2 2026</span>
-                <span className="text-[10px] font-bold text-blue-400">IN DEVELOPMENT</span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Next</span>
+                <span className="text-[10px] font-bold text-blue-400">PLANNED</span>
               </div>
-              <h3 className="text-lg font-bold text-white">Hardware RIP & Cloud Print</h3>
+              <h3 className="text-lg font-bold text-white">Deeper Pre-Press</h3>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li className="flex items-center space-x-2">
-                  <Cpu className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Direct REST API into Fiery, Harlequin & Onyx RIP</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Cloud className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Direct Cloud IP printing for Heidelberg & Konica</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Receipt className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Automated GST/VAT tax invoice & job receipt generator</span>
-                </li>
+                <li className="flex items-center space-x-2"><Cpu className="w-4 h-4 text-indigo-400 shrink-0" /><span>ICC profile soft-proofing</span></li>
+                <li className="flex items-center space-x-2"><Layers className="w-4 h-4 text-indigo-400 shrink-0" /><span>Gang-run nesting optimiser</span></li>
+                <li className="flex items-center space-x-2"><Receipt className="w-4 h-4 text-indigo-400 shrink-0" /><span>Tax invoice &amp; job receipts</span></li>
               </ul>
             </div>
 
-            {/* Q3 2026 */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4 relative">
+            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">Q3 2026</span>
-                <span className="text-[10px] font-bold text-gray-400">PLANNED PHASE</span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">Later</span>
+                <span className="text-[10px] font-bold text-gray-400">PLANNED</span>
               </div>
-              <h3 className="text-lg font-bold text-white">Wide-Format & Multi-Tenant</h3>
+              <h3 className="text-lg font-bold text-white">Wide Format</h3>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li className="flex items-center space-x-2">
-                  <ImageIcon className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>Wide format flex, vinyl & billboard designer AI</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Layers className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>Multi-operator press queue & role-based access</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>AI automated gang-run nesting optimization</span>
-                </li>
+                <li className="flex items-center space-x-2"><ImageIcon className="w-4 h-4 text-purple-400 shrink-0" /><span>Flex, vinyl &amp; banner layouts</span></li>
+                <li className="flex items-center space-x-2"><Smartphone className="w-4 h-4 text-purple-400 shrink-0" /><span>Mobile capture &amp; framing</span></li>
+                <li className="flex items-center space-x-2"><MessageSquare className="w-4 h-4 text-purple-400 shrink-0" /><span>Order intake integrations</span></li>
               </ul>
             </div>
 
-            {/* Q4 2026 */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4 relative">
+            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Q4 2026</span>
-                <span className="text-[10px] font-bold text-gray-400">UPCOMING VISION</span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Vision</span>
+                <span className="text-[10px] font-bold text-gray-400">FUTURE</span>
               </div>
-              <h3 className="text-lg font-bold text-white">Autonomous Press AI</h3>
+              <h3 className="text-lg font-bold text-white">Shop Management</h3>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li className="flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Predictive maintenance AI for offset cylinders & ink pumps</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <DollarSign className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Automated paper market price benchmarking</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>ISO 12647-2 commercial print compliance audit</span>
-                </li>
+                <li className="flex items-center space-x-2"><TrendingUp className="w-4 h-4 text-amber-400 shrink-0" /><span>Job queue &amp; roles</span></li>
+                <li className="flex items-center space-x-2"><DollarSign className="w-4 h-4 text-amber-400 shrink-0" /><span>Paper price benchmarking</span></li>
+                <li className="flex items-center space-x-2"><Cloud className="w-4 h-4 text-amber-400 shrink-0" /><span>ISO 12647-2 compliance checks</span></li>
               </ul>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* FAQ SECTION */}
+      {/* FAQ */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
         <div className="text-center space-y-3 mb-12">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Frequently Asked Questions</h2>
-          <p className="text-gray-400 text-sm">Everything you need to know about PrintPilot AI pre-press engineering.</p>
+          <p className="text-gray-400 text-sm">How the print toolkit actually works.</p>
         </div>
 
         <div className="space-y-4">
@@ -593,9 +529,7 @@ export const LandingPage: React.FC = () => {
                 <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${openFaq === index ? 'rotate-180 text-blue-400' : ''}`} />
               </button>
               {openFaq === index && (
-                <div className="px-6 pb-6 text-sm text-gray-300 leading-relaxed border-t border-white/5 pt-4">
-                  {faq.answer}
-                </div>
+                <div className="px-6 pb-6 text-sm text-gray-300 leading-relaxed border-t border-white/5 pt-4">{faq.answer}</div>
               )}
             </div>
           ))}
@@ -605,23 +539,20 @@ export const LandingPage: React.FC = () => {
       {/* FOOTER CTA */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
         <div className="p-10 rounded-3xl bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-transparent border border-blue-500/30 backdrop-blur-md shadow-2xl space-y-6">
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white">
-            Ready to Upgrade Your Print Shop?
-          </h2>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white">Ready to Upgrade Your Print Workflow?</h2>
           <p className="text-gray-300 text-base max-w-2xl mx-auto">
-            Join hundreds of commercial printers, digital press studios, and sign shops using PrintPilot AI today.
+            Run every tool right now in your browser — no uploads, no external AI, no setup.
           </p>
           <div className="flex justify-center">
             <button
               onClick={() => navigateToTool('preflight')}
               className="px-8 py-4 rounded-2xl bg-blue-600 text-white font-bold text-base hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30"
             >
-              Start Using AI Tools Hub Now
+              Open the Tools Hub
             </button>
           </div>
         </div>
       </section>
-
     </div>
   );
 };

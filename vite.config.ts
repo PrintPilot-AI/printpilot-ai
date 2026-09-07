@@ -2,70 +2,73 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, Plugin } from 'vite';
-import {
-  handlePrintDoctor,
-  handlePosterGenerator,
-  handleCardGenerator,
-  handleResumeBuilder,
-  handleImageEnhancer,
-  handleCostEstimator,
-  handleColorAdvisor,
-  handlePreflightCheck,
-} from './src/server/geminiApi.ts';
+import { apiHandlers } from './src/server/printApi.ts';
 
-function apiMiddlewarePlugin(): Plugin {
+/**
+ * Deterministic print-toolkit API middleware.
+ *
+ * Every route under /api/print/* returns JSON computed by the same pure
+ * engines used in the browser. There is no external AI/LLM dependency.
+ *
+ * Routing guarantees:
+ *  - Only /api/print/* is intercepted; everything else falls through to Vite.
+ *  - Responses always set Content-Type: application/json so the frontend
+ *    receives JSON, never the SPA's <!doctype html>.
+ *  - Errors are returned as JSON with a proper status code and message.
+ */
+function printApiPlugin(): Plugin {
+  const routes: Record<string, (body: any) => unknown> = {
+    doctor: apiHandlers.doctor,
+    preflight: apiHandlers.preflight,
+    'cost-estimate': apiHandlers.cost,
+    'color-advice': apiHandlers.color,
+    poster: apiHandlers.poster,
+  };
+
   return {
-    name: 'api-middleware-plugin',
+    name: 'print-api-plugin',
     configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        if (!req.url?.startsWith('/api/gemini/')) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith('/api/print/')) {
           return next();
         }
 
-        const endpoint = req.url.replace('/api/gemini/', '').split('?')[0];
-        let body = '';
+        const endpoint = req.url.replace('/api/print/', '').split('?')[0];
+        res.setHeader('Content-Type', 'application/json');
 
-        req.on('data', chunk => {
+        const handler = routes[endpoint];
+        if (!handler) {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: `Unknown endpoint "${endpoint}".` }));
+          return;
+        }
+
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: 'Use POST for this endpoint.' }));
+          return;
+        }
+
+        let body = '';
+        req.on('data', (chunk) => {
           body += chunk.toString();
+          if (body.length > 5 * 1024 * 1024) {
+            res.statusCode = 413;
+            res.end(JSON.stringify({ error: 'Request body too large (max 5 MB).' }));
+            req.destroy();
+          }
         });
 
-        req.on('end', async () => {
+        req.on('end', () => {
+          if (res.writableEnded) return;
           try {
-            const parsedBody = body ? JSON.parse(body) : {};
-            res.setHeader('Content-Type', 'application/json');
-
-            if (endpoint === 'doctor') {
-              const data = await handlePrintDoctor(parsedBody.issueDescription, parsedBody.printType, parsedBody.paperType);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'poster') {
-              const data = await handlePosterGenerator(parsedBody.prompt, parsedBody.category, parsedBody.colorScheme, parsedBody.dimensions);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'card') {
-              const data = await handleCardGenerator(parsedBody.cardDetails || parsedBody);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'resume') {
-              const data = await handleResumeBuilder(parsedBody.resumeData || parsedBody);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'enhance') {
-              const data = await handleImageEnhancer(parsedBody);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'cost-estimate') {
-              const data = await handleCostEstimator(parsedBody);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'color-advice') {
-              const data = await handleColorAdvisor(parsedBody);
-              res.end(JSON.stringify(data));
-            } else if (endpoint === 'preflight') {
-              const data = await handlePreflightCheck(parsedBody);
-              res.end(JSON.stringify(data));
-            } else {
-              res.statusCode = 404;
-              res.end(JSON.stringify({ error: 'Endpoint not found' }));
-            }
+            const parsed = body ? JSON.parse(body) : {};
+            const data = handler(parsed);
+            res.statusCode = 200;
+            res.end(JSON.stringify({ data }));
           } catch (err: any) {
-            console.error('API Middleware Error:', err);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: err?.message || 'Server error' }));
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: err?.message || 'Invalid request.' }));
           }
         });
       });
@@ -75,7 +78,7 @@ function apiMiddlewarePlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), apiMiddlewarePlugin()],
+    plugins: [react(), tailwindcss(), printApiPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

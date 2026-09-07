@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Award, 
-  Sparkles, 
-  Printer, 
-  Check, 
-  GraduationCap, 
-  FileText, 
-  ShieldCheck, 
-  Star 
-} from 'lucide-react';
+import { Award, Printer } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { openPrintWindow, addStyles, el } from '../../lib/security';
 
 export interface CertificateData {
   certType: 'achievement' | 'completion' | 'appreciation' | 'course' | 'workshop' | 'participation';
@@ -28,13 +20,13 @@ export const CertificateGenerator: React.FC = () => {
 
   const [certData, setCertData] = useState<CertificateData>({
     certType: 'completion',
-    recipientName: 'Muhammad Hamza Khan',
-    courseTitle: 'Advanced Commercial Pre-press & Color Management Masterclass',
-    organizationName: 'Apex Printing & Media Academy',
-    issuerName: 'Dr. Sarah Jenkins',
-    issuerTitle: 'Chief Director of Press Operations',
-    issueDate: '2026-03-20',
-    certificateId: 'CERT-2026-9901X',
+    recipientName: '',
+    courseTitle: '',
+    organizationName: '',
+    issuerName: '',
+    issuerTitle: '',
+    issueDate: new Date().toISOString().slice(0, 10),
+    certificateId: `CERT-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
     styleTheme: 'gold-classic',
   });
 
@@ -43,80 +35,62 @@ export const CertificateGenerator: React.FC = () => {
       title: `Certificate: ${certData.recipientName} (${certData.certType.toUpperCase()})`,
       toolType: 'Certificate',
       status: 'Ready',
-      summary: `High-resolution 300 DPI vector award certificate formatted for A4 landscape press printing.`
+      summary: `A4 landscape award certificate built with the DOM print window.`,
     });
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    openPrintWindow(`${certData.recipientName} - Award Certificate`, (doc) => {
+      addStyles(doc, `
+        @page { size: A4 landscape; margin: 10mm; }
+        body { font-family: 'Georgia', serif; background: #fff; padding: 0; margin: 0; color: #1e293b; }
+        .cert-box { border: 12px double #b45309; padding: 15mm; text-align: center; box-sizing: border-box; height: 190mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff8f1; }
+        .org { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: #78350f; font-weight: bold; }
+        .title { font-size: 28px; text-transform: uppercase; letter-spacing: 3px; color: #92400e; margin: 10px 0; font-family: sans-serif; font-weight: 800; }
+        .sub { font-size: 13px; font-style: italic; color: #451a03; }
+        .recipient { font-size: 32px; font-weight: bold; color: #1e1b4b; text-decoration: underline; margin: 12px 0; }
+        .desc { font-size: 13px; line-height: 1.6; max-width: 80%; margin: 0 auto; color: #334155; }
+        .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; border-top: 1px solid #d97706; padding-top: 10px; }
+        .sig-box { text-align: center; }
+        .sig-title { font-size: 10px; font-family: sans-serif; color: #64748b; margin-top: 4px; }
+        .seal { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #b45309; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto; }
+        .seal-id { font-size: 9px; color: #78350f; margin-top: 2px; font-family: monospace; }
+      `);
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${certData.recipientName} - Award Certificate</title>
-          <style>
-            @page { size: A4 landscape; margin: 10mm; }
-            body { font-family: 'Georgia', serif; background: #fff; padding: 0; margin: 0; color: #1e293b; }
-            .cert-box {
-              border: 12px double #b45309;
-              padding: 15mm;
-              text-align: center;
-              box-sizing: border-box;
-              height: 190mm;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              background: #fff8f1;
-            }
-            .org { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: #78350f; font-weight: bold; }
-            .title { font-size: 28px; text-transform: uppercase; letter-spacing: 3px; color: #92400e; margin: 10px 0; font-family: sans-serif; font-weight: 800; }
-            .sub { font-size: 13px; font-style: italic; color: #451a03; }
-            .recipient { font-size: 32px; font-weight: bold; color: #1e1b4b; text-decoration: underline; margin: 12px 0; }
-            .desc { font-size: 13px; line-height: 1.6; max-width: 80%; margin: 0 auto; color: #334155; }
-            .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; border-top: 1px solid #d97706; padding-top: 10px; }
-            .sig-box { text-align: center; }
-            .sig-title { font-size: 10px; font-family: sans-serif; color: #64748b; margin-top: 4px; }
-          </style>
-        </head>
-        <body>
-          <div class="cert-box">
-            <div>
-              <div class="org">${certData.organizationName}</div>
-              <div class="title">Certificate of ${certData.certType}</div>
-              <div class="sub">This official credential is proudly awarded to</div>
-            </div>
+      const box = el(doc, 'div', { className: 'cert-box' });
 
-            <div class="recipient">${certData.recipientName}</div>
+      const head = el(doc, 'div');
+      head.appendChild(el(doc, 'div', { className: 'org', text: certData.organizationName }));
+      head.appendChild(el(doc, 'div', { className: 'title', text: `Certificate of ${certData.certType}` }));
+      head.appendChild(el(doc, 'div', { className: 'sub', text: 'This official credential is proudly awarded to' }));
+      box.appendChild(head);
 
-            <div class="desc">
-              For successfully fulfilling all prescribed academic and practical press standards in<br/>
-              <strong>"${certData.courseTitle}"</strong>
-            </div>
+      box.appendChild(el(doc, 'div', { className: 'recipient', text: certData.recipientName }));
 
-            <div class="footer">
-              <div class="sig-box">
-                <div style="font-size: 11px; font-weight: bold;">${certData.issueDate}</div>
-                <div class="sig-title">Date of Issuance</div>
-              </div>
+      const desc = el(doc, 'div', { className: 'desc' });
+      desc.appendChild(doc.createTextNode('For successfully fulfilling all prescribed academic and practical press standards in '));
+      const strong = el(doc, 'strong', { text: `"${certData.courseTitle}"` });
+      desc.appendChild(strong);
+      box.appendChild(desc);
 
-              <div style="text-align: center;">
-                <div style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #b45309; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto;">★</div>
-                <div style="font-size: 9px; color: #78350f; margin-top: 2px; font-family: monospace;">ID: ${certData.certificateId}</div>
-              </div>
+      const footer = el(doc, 'div', { className: 'footer' });
 
-              <div class="sig-box">
-                <div style="font-size: 13px; font-weight: bold; font-family: sans-serif;">${certData.issuerName}</div>
-                <div class="sig-title">${certData.issuerTitle}</div>
-              </div>
-            </div>
-          </div>
-          <script>window.onload = function() { window.print(); };</script>
-        </body>
-      </html>
-    `;
+      const dateBox = el(doc, 'div', { className: 'sig-box' });
+      dateBox.appendChild(el(doc, 'div', { text: certData.issueDate, style: { fontSize: '11px', fontWeight: 'bold' } }));
+      dateBox.appendChild(el(doc, 'div', { className: 'sig-title', text: 'Date of Issuance' }));
+      footer.appendChild(dateBox);
 
-    printWindow.document.write(html);
-    printWindow.document.close();
+      const sealWrap = el(doc, 'div', { style: { textAlign: 'center' } });
+      sealWrap.appendChild(el(doc, 'div', { className: 'seal', text: '★' }));
+      sealWrap.appendChild(el(doc, 'div', { className: 'seal-id', text: `ID: ${certData.certificateId}` }));
+      footer.appendChild(sealWrap);
+
+      const sigBox = el(doc, 'div', { className: 'sig-box' });
+      sigBox.appendChild(el(doc, 'div', { text: certData.issuerName, style: { fontSize: '13px', fontWeight: 'bold', fontFamily: 'sans-serif' } }));
+      sigBox.appendChild(el(doc, 'div', { className: 'sig-title', text: certData.issuerTitle }));
+      footer.appendChild(sigBox);
+
+      box.appendChild(footer);
+      doc.body.appendChild(box);
+    });
   };
 
   return (
@@ -177,6 +151,7 @@ export const CertificateGenerator: React.FC = () => {
               type="text"
               value={certData.recipientName}
               onChange={(e) => setCertData({ ...certData, recipientName: e.target.value })}
+              placeholder="e.g. Jane A. Doe"
               className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-xs text-white focus:outline-none focus:border-blue-500"
             />
           </div>

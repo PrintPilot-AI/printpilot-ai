@@ -1,6 +1,6 @@
 import React from 'react';
-import { useAuth, ToolType, PageName } from '../context/AuthContext';
-import { Printer, Sparkles, ShieldCheck, Heart, ArrowUpRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Printer, Sparkles } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const { setCurrentPage, navigateToTool } = useAuth();
@@ -22,54 +22,59 @@ export const Footer: React.FC = () => {
             </div>
             
             <p className="text-sm text-gray-400 max-w-sm leading-relaxed">
-              The premier AI-powered operating platform for commercial printing businesses, digital print shops, sign shops, and graphic packaging teams.
+              A browser-local print production toolkit for commercial printers, digital print shops, sign shops and packaging teams. Every tool runs deterministic print math client-side — no external AI or file uploads.
             </p>
 
             <div className="flex items-center space-x-3 text-xs text-gray-400 pt-2">
               <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Pre-flight Engine Active</span>
+                <span>Runs 100% Locally</span>
               </span>
               <span className="text-gray-600">•</span>
-              <span className="text-gray-400">300 DPI Pre-press Verified</span>
+              <span className="text-gray-400">Exact DPI &amp; Print Specs</span>
             </div>
           </div>
 
-          {/* AI Tools Links */}
+          {/* Tools Links */}
           <div className="space-y-3">
             <h4 className="text-xs font-semibold text-white uppercase tracking-wider flex items-center space-x-1">
               <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-              <span>AI Tools</span>
+              <span>Tools</span>
             </h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <button onClick={() => navigateToTool('doctor')} className="hover:text-blue-400 transition-colors">
-                  AI Print Doctor
+                <button onClick={() => navigateToTool('passport')} className="hover:text-blue-400 transition-colors">
+                  Passport Photo Maker
                 </button>
               </li>
               <li>
                 <button onClick={() => navigateToTool('preflight')} className="hover:text-blue-400 transition-colors">
-                  AI Print Readiness
+                  Pre-flight Checker
                 </button>
               </li>
               <li>
-                <button onClick={() => navigateToTool('poster')} className="hover:text-blue-400 transition-colors">
-                  AI Poster Generator
+                <button onClick={() => navigateToTool('doctor')} className="hover:text-blue-400 transition-colors">
+                  Print Doctor
                 </button>
               </li>
               <li>
-                <button onClick={() => navigateToTool('card')} className="hover:text-blue-400 transition-colors">
-                  AI Visiting Card
+                <button onClick={() => navigateToTool('enhance')} className="hover:text-blue-400 transition-colors">
+                  Image Enhancer
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigateToTool('pdf-tools')} className="hover:text-blue-400 transition-colors">
+                  PDF Toolkit
                 </button>
               </li>
               <li>
                 <button onClick={() => navigateToTool('cost')} className="hover:text-blue-400 transition-colors">
-                  AI Print Cost Estimator
+                  Print Cost Estimator
                 </button>
               </li>
               <li>
                 <button onClick={() => navigateToTool('color')} className="hover:text-blue-400 transition-colors">
-                  AI Color Advisor
+                  Colour Advisor
                 </button>
               </li>
             </ul>
@@ -88,7 +93,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <button onClick={() => setCurrentPage('tools-hub')} className="hover:text-white transition-colors">
-                  AI Tools Hub
+                  Tools Hub
                 </button>
               </li>
               <li>
@@ -124,7 +129,7 @@ export const Footer: React.FC = () => {
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400">Soon</span>
               </li>
               <li className="flex items-center justify-between">
-                <span>AI Invoice & GST</span>
+                <span>Invoice &amp; GST</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400">Soon</span>
               </li>
               <li className="flex items-center justify-between">
@@ -138,7 +143,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
-          <p>© {new Date().getFullYear()} PrintPilot AI — The Enterprise Standard for AI Printing.</p>
+          <p>© {new Date().getFullYear()} PrintPilot AI — Browser-Local Print Production Toolkit.</p>
           <div className="flex items-center space-x-6">
             <button onClick={() => setCurrentPage('faq')} className="hover:text-gray-400 transition-colors">Privacy & Security</button>
             <button onClick={() => setCurrentPage('contact')} className="hover:text-gray-400 transition-colors">System Support</button>

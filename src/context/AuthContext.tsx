@@ -82,41 +82,6 @@ const defaultProfile: PrintShopProfile = {
   defaultBleed: '3mm (0.125 in)',
 };
 
-const sampleJobs: SavedPrintJob[] = [
-  {
-    id: 'job-101',
-    title: 'Pre-flight Audit: Annual_Report_2026_Final.pdf',
-    toolType: 'Preflight',
-    status: 'Ready',
-    summary: '300 DPI passed, 3mm bleed detected, all fonts embedded in CMYK.',
-    timestamp: 'Today at 10:14 AM'
-  },
-  {
-    id: 'job-102',
-    title: 'Print Doctor: Flex Banner Blurry Text Defect',
-    toolType: 'Doctor',
-    status: 'Warning',
-    summary: 'Heater temperature low + RIP vector resolution set to 72 DPI instead of 150 DPI.',
-    timestamp: 'Yesterday at 4:30 PM'
-  },
-  {
-    id: 'job-103',
-    title: 'Card Generator: Executive Gold Foil Business Card',
-    toolType: 'Card',
-    status: 'Completed',
-    summary: 'Generated double-sided 350 GSM soft-touch vector layout with spot UV overlay.',
-    timestamp: 'Jul 21, 2026'
-  },
-  {
-    id: 'job-104',
-    title: 'Cost Estimator: 5,000 Catalogues (130 GSM Gloss)',
-    toolType: 'Cost',
-    status: 'Ready',
-    summary: 'Total production cost $412.50 | Suggested retail $650.00 (36.5% margin).',
-    timestamp: 'Jul 20, 2026'
-  }
-];
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -129,8 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeTool, setActiveTool] = useState<ToolType>('preflight');
   const [shopProfile, setShopProfile] = useState<PrintShopProfile>(defaultProfile);
   const [jobHistory, setJobHistory] = useState<SavedPrintJob[]>(() => {
-    const saved = localStorage.getItem('printpilot_jobs');
-    return saved ? JSON.parse(saved) : sampleJobs;
+    try {
+      const saved = localStorage.getItem('printpilot_jobs');
+      return saved ? (JSON.parse(saved) as SavedPrintJob[]) : [];
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {

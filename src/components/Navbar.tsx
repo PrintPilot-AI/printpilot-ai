@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth, PageName, ToolType } from '../context/AuthContext';
-import { 
-  Printer, 
-  Sparkles, 
-  LayoutDashboard, 
-  User as UserIcon, 
-  HelpCircle, 
-  Mail, 
-  LogOut, 
-  LogIn, 
-  UserPlus, 
-  Menu, 
+import {
+  Printer,
+  Sparkles,
+  LayoutDashboard,
+  User as UserIcon,
+  HelpCircle,
+  Mail,
+  LogOut,
+  LogIn,
+  UserPlus,
+  Menu,
   X,
   ChevronDown,
   Stethoscope,
@@ -20,7 +20,10 @@ import {
   Sliders,
   DollarSign,
   Palette,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  Layers,
+  Award,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -36,15 +39,19 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
 
-  const toolsList: { id: ToolType; label: string; icon: any; badge: string; desc: string }[] = [
-    { id: 'doctor', label: 'AI Print Doctor', icon: Stethoscope, badge: 'Diagnostic', desc: 'Fix banding, blurry text & press defects' },
-    { id: 'preflight', label: 'AI Print Readiness', icon: CheckCircle2, badge: 'Pre-flight', desc: 'Check 300 DPI, CMYK & 3mm bleed' },
-    { id: 'poster', label: 'AI Poster Generator', icon: ImageIcon, badge: 'Design', desc: 'Generate high-res vector print posters' },
-    { id: 'card', label: 'AI Visiting Card', icon: CreditCard, badge: 'Vector', desc: 'Double-sided 300 DPI business cards' },
-    { id: 'cost', label: 'AI Print Cost Estimator', icon: DollarSign, badge: 'Finance', desc: 'Paper GSM, ink, finishing & margins' },
-    { id: 'color', label: 'AI Color Correction', icon: Palette, badge: 'Pre-press', desc: 'RGB to CMYK & Pantone spot matching' },
-    { id: 'enhance', label: 'AI Image Enhancer', icon: Sliders, badge: 'Raster', desc: 'DPI calculator & edge sharpening' },
-    { id: 'resume', label: 'AI Resume Builder', icon: FileText, badge: 'Print Spec', desc: '1-page ATS print-optimized resume' },
+  const toolsList: { id: ToolType; label: string; icon: React.ComponentType<{ className?: string }>; badge: string; desc: string }[] = [
+    { id: 'passport', label: 'Passport Photo Maker', icon: ShieldCheck, badge: 'ICAO', desc: '35×45mm framing, bg removal, 300 DPI' },
+    { id: 'preflight', label: 'Pre-flight Checker', icon: CheckCircle2, badge: 'Audit', desc: 'Real DPI, colour mode & bleed check' },
+    { id: 'doctor', label: 'Print Doctor', icon: Stethoscope, badge: 'Diagnostic', desc: 'Rule-based banding, hickeys & blur fixes' },
+    { id: 'enhance', label: 'Image Enhancer', icon: Sliders, badge: 'Canvas', desc: 'Local upscale, sharpen & auto-levels' },
+    { id: 'card', label: 'Visiting Card Studio', icon: CreditCard, badge: 'Card', desc: 'Front/back themes with real QR codes' },
+    { id: 'resume', label: 'Resume Builder', icon: FileText, badge: 'A4', desc: 'User-driven templates & live preview' },
+    { id: 'pdf-tools', label: 'PDF Toolkit', icon: Layers, badge: 'pdf-lib', desc: 'Merge, split, rotate, reorder & info' },
+    { id: 'cost', label: 'Print Cost Estimator', icon: DollarSign, badge: 'Finance', desc: 'Sheet nesting, GSM weight & margins' },
+    { id: 'color', label: 'Colour Advisor', icon: Palette, badge: 'Pre-press', desc: 'RGB→CMYK, TAC & nearest Pantone' },
+    { id: 'poster', label: 'Poster Generator', icon: ImageIcon, badge: 'Vector', desc: 'Deterministic SVG poster layouts' },
+    { id: 'certificate', label: 'Certificate Generator', icon: Award, badge: 'A4', desc: 'Editable award certificates' },
+    { id: 'idcard', label: 'ID Card Designer', icon: CreditCard, badge: 'CR80', desc: '85.6×54mm cards with QR credential' },
   ];
 
   const handleNavClick = (page: PageName) => {
@@ -76,7 +83,7 @@ export const Navbar: React.FC = () => {
               <span className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
                 PrintPilot <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">AI</span>
               </span>
-              <span className="text-[10px] text-gray-400 block -mt-1 font-medium">The Enterprise Standard for AI Printing</span>
+              <span className="text-[10px] text-gray-400 block -mt-1 font-medium">Browser-Local Print Production Toolkit</span>
             </div>
           </button>
 
@@ -104,7 +111,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <Sparkles className="w-4 h-4 text-blue-400" />
-                <span>AI Tools Hub</span>
+                <span>Tools Hub</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${toolsDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -115,7 +122,7 @@ export const Navbar: React.FC = () => {
                   onMouseLeave={() => setToolsDropdownOpen(false)}
                 >
                   <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 mb-1">
-                    8 Commercial Print AI Tools
+                    12 Print Production Tools
                   </div>
                   <div className="grid grid-cols-1 gap-1 max-h-96 overflow-y-auto">
                     {toolsList.map((tool) => {
@@ -265,7 +272,7 @@ export const Navbar: React.FC = () => {
             >
               <span className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-indigo-500" />
-                <span>AI Tools Hub (8 Tools)</span>
+                <span>Tools Hub (12 Tools)</span>
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">Hub</span>
             </button>
