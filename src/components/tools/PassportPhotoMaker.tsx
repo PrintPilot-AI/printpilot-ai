@@ -24,7 +24,7 @@ const DOC_SPECS: Record<DocType, DocSpec> = {
   license: { title: 'Driving Licence', widthMm: 30, heightMm: 40, note: 'Licence portrait 30 × 40 mm' },
 };
 
-const BG_COLORS: Record<BgColor, string> = { white: '#FFFFFF', skyblue: '#BFE3F5', gray: '#D8DCE1' };
+const BG_COLORS: Record<BgColor, string> = { white: '#FFFFFF', skyblue: '#5DADE2', gray: '#D8DCE1' };
 const DPI = 300;
 const SHEET = { widthMm: 210, heightMm: 297 }; // A4
 
